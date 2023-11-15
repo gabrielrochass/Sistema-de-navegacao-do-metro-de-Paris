@@ -3,44 +3,55 @@ using namespace std;
 
 typedef pair<int,float> Parint;
 
-vector<vector<pair<int, Parint>>> realDist() {
-    vector<vector<pair<int, double>>> realStations(14); 
+// cria o grafo do mapa do metrô
+vector<vector<Parint>> realDist() {
+  vector<vector<Parint>> realStations(15); 
 
-    realStations[0].push_back({1, 10.0});
+  // E1 -> E2
+  realStations[1].push_back({2, 10.0});
 
-    realStations[1].push_back({2, 8.5});
-    realStations[1].push_back({8, 10.0});
-    realStations[1].push_back({9, 3.5});
+  // E2 -> E3, E9, E10
+  realStations[2].push_back({3, 8.5});
+  realStations[2].push_back({4, 10.0});
+  realStations[2].push_back({10, 3.5});
 
-    realStations[2].push_back({3, 6.3});
-    realStations[2].push_back({8, 9.4});
-    realStations[2].push_back({12, 18.7});
+  // E3 -> E4, E9, E13
+  realStations[3].push_back({4, 6.3});
+  realStations[3].push_back({9, 9.4});
+  realStations[3].push_back({13, 18.7});
 
-    realStations[3].push_back({4, 13.0});
-    realStations[3].push_back({7, 15.3});
-    realStations[3].push_back({12, 12.8});
-    realStations[3].push_back({13, 1.1});
+  // E4 -> E5, E8, E13, E14
+  realStations[4].push_back({5, 13.0});
+  realStations[4].push_back({8, 15.4});
+  realStations[4].push_back({13, 12.8});
+  realStations[4].push_back({14, 1.1});
 
-    realStations[4].push_back({5, 3.0});
-    realStations[4].push_back({6, 2.4});
-    realStations[4].push_back({7, 30.0});
+  // E5 -> E6, E7, E8
+  realStations[5].push_back({6, 3.0});
+  realStations[5].push_back({7, 2.4});
+  realStations[5].push_back({8, 30.0});
 
-    realStations[7].push_back({8, 9.6});
-    realStations[7].push_back({11, 6.4});
+  // E8 -> E9, E12
+  realStations[8].push_back({9, 9.6});
+  realStations[8].push_back({12, 6.4});
 
-    realStations[8].push_back({10, 12.2});
+  // E9 -> E11
+  realStations[9].push_back({11, 12.2});
 
-    realStations[12].push_back({13, 5.1});
+  // E13 -> E14
+  realStations[13].push_back({14, 5.1});
 
-    return realStations;
-}
+  return realStations;
+} // E6, E7, E10, E11, E12 não chegam a lugar nenhum! -> evitar, apesar da heurística ser menor (a não ser que seja o destino - if !tiverCaminho(bool) and x != destino {continue} ?)
+
+
 
 // criar lista de adj com distâncias diretas entre as estações -> só vai pra frente
 vector<vector<Parint>> strDist() 
 {
     vector<vector<Parint>> stations(15); // setando com um tamanho a mais para dar match com o número das estações (inciando do 1)
     // stations[origem].push_back({destino, custo});
-    
+
     // distâncias diretas a partir de E1(1) para todas as outras estações
     stations[1].push_back({1, 0.0});
     stations[1].push_back({2, 10.0});
@@ -187,44 +198,21 @@ vector<vector<Parint>> strDist()
 //    return p + h;
 //}
 
-void Dijkstra(Graph* g,int s)
-{
-    priority_queue< Parint, vector<Parint>, greater<Parint>> H;
-    int v;
-    for (int i=0; i< g->size;i++)
-    {
-        g->Distance[i] = 1000000;
-        setMark(g,i,0);
-    }
-    H.push(make_pair(0,s));
-    g->Distance[s] = 0;
-    setMark(g,s,1);
-    while(!H.empty())
-    {
-        int u = H.top().second;
-        H.pop();
-
-        for(auto edge: g->adjL[u])
-        { 
-            int v = edge.first;
-            int wt = edge.second;
-
-            if((getMark(g,v) != 1) && g->Distance[u] + wt < g->Distance[v])
-            {
-                g->Distance[v] = g->Distance[u] + heuristic(wt);
-                H.emplace(g->Distance[v], v);
-            }
+float calc_dist_metro(vector<vector<Parint>> realStations, int start, int nextDest) {
+    float distancia = 0.0;
+    for (int i = 0; i < realStations[start].size(); i++) {
+        if (realStations[start][i].first == nextDest) {
+            distancia = realStations[start][i].second;
+            break;
         }
-        setMark(g, u, 1);
     }
+    return distancia;
 }
 
-float calc_dist_ret(vector<vector<Parint>> stations, int origin,int dest)
-{
+float calc_dist_ret(vector<vector<Parint>> stations, int origin, int dest) {
     float distancia = 0.0;
-    for (int i = origin; i < 15;i++){
-        if (stations[origin][i].first == dest)
-        {
+    for (int i = 0; i < stations[origin].size(); i++) {
+        if (stations[origin][i].first == dest) {
             distancia = stations[origin][i].second;
             break;
         }
@@ -232,10 +220,22 @@ float calc_dist_ret(vector<vector<Parint>> stations, int origin,int dest)
     return distancia;
 }
 
-int main()
-{
-    Graph* metro = create_graph(14);
-    init_metro(metro);
-    vector<vector<Parint>> stations = strDist(); // cria a tabela com distâncias em linha reta até as outras estações
-    return 0;
+float heuristic(vector<vector<Parint>> realStations, vector<vector<Parint>> stations, int start, int destine) {
+    
+  float metro = calc_dist_metro(realStations, start, destine);
+  float str = calc_dist_ret(stations, start, destine);
+
+  return metro + str;
+}
+
+
+int main() {
+  // Graph* metro = create_graph(14);
+  // init_metro(metro);
+  vector<vector<Parint>> realStations = realDist(); // cria a tabela com distâncias através das linhas de metrô entre as estações
+  vector<vector<Parint>> stations = strDist(); // cria a tabela com distâncias em linha reta até as outras estações
+
+  float dist = heuristic(realStations, stations, 1, 2);
+  cout << dist << endl;
+  return 0;
 }
