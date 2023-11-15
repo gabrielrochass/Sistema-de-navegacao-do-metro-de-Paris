@@ -192,11 +192,6 @@ vector<vector<Parint>> strDist()
     return stations;
 }
 
-//int heuristic(Graph*g, vector<vector<Parint>> stations, int origin,int nextDest, int dest){
-//    float p = getEdge(g,origin,nextDest);
-//    float h = calc_dist_ret(stations, nextDest, dest);
-//    return p + h;
-//}
 
 float calc_dist_metro(vector<vector<Parint>> realStations, int start, int nextDest) {
     float distancia = 0.0;
@@ -220,22 +215,36 @@ float calc_dist_ret(vector<vector<Parint>> stations, int origin, int dest) {
     return distancia;
 }
 
-float heuristic(vector<vector<Parint>> realStations, vector<vector<Parint>> stations, int start, int destine) {
-    
-  float metro = calc_dist_metro(realStations, start, destine);
-  float str = calc_dist_ret(stations, start, destine);
+pair<float, int> heuristic(vector<vector<Parint>>& realStations, vector<vector<Parint>>& stations, int start, int destine) {
+  float minTotalDistance = FLT_MAX;
+  int chosenNeighbor = -1; 
 
-  return metro + str;
+  for (int i = 0; i < realStations[start].size(); ++i) {
+    int neighborStation = realStations[start][i].first; 
+    float distToNeighbor = realStations[start][i].second; 
+
+  
+    float distFromNeighborToDest = calc_dist_ret(stations, neighborStation, destine);
+
+    float totalDistance = distToNeighbor + distFromNeighborToDest;
+
+    if (totalDistance < minTotalDistance) {
+      minTotalDistance = totalDistance;
+      chosenNeighbor = neighborStation; 
+    }
+  }
+
+  return make_pair(minTotalDistance, chosenNeighbor);
 }
 
-
 int main() {
-  // Graph* metro = create_graph(14);
-  // init_metro(metro);
-  vector<vector<Parint>> realStations = realDist(); // cria a tabela com distâncias através das linhas de metrô entre as estações
-  vector<vector<Parint>> stations = strDist(); // cria a tabela com distâncias em linha reta até as outras estações
+  vector<vector<Parint>> realStations = realDist();
+  vector<vector<Parint>> stations = strDist();
 
-  float dist = heuristic(realStations, stations, 1, 2);
-  cout << dist << endl;
+  pair<float, int> result = heuristic(realStations, stations, 1, 3);
+
+  cout << "Menor distância total: " << result.first << endl;
+  //cout << "Vizinho escolhido: " << result.second << endl;
+
   return 0;
 }
