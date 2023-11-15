@@ -1,11 +1,5 @@
 #include <iostream>
 #include <vector>
-using namespace std;
-
-
-#include <iostream>
-#include <queue>
-#include <map>
 #include <bits/stdc++.h>
 using namespace std;
 
@@ -29,10 +23,6 @@ Graph* create_graph(int n){
     g->Distance = vector<int>(n, 1e9);         
 
     return g;
-}
-
-int n(Graph* g){
-    return g->size;
 }
 
 void setEdge(Graph* g,int i,int j,float wt)
@@ -64,14 +54,11 @@ Graph* init_metro(Graph* g)
     setEdge(g,3,12,12.8);
     setEdge(g,3,13,1.1);
     setEdge(g,12,13,5.1);
-
 }
 
 int main()
 {
-    vector<string> rel_est_index (14);
     Graph* metro = create_graph(14);
     init_metro(metro);
-
     return 0;
 }
