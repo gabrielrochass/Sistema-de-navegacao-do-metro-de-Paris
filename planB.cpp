@@ -3,65 +3,42 @@ using namespace std;
 
 typedef pair<int,float> Parint;
 
-struct Graph
-{
-    int size;
-    int numEdges;
-    list<Parint> *adjL;    
-    vector<int> Mark;                   
-    vector<int> Distance;                
-};
+vector<vector<pair<int, Parint>>> realDist() {
+    vector<vector<pair<int, double>>> realStations(14); 
 
-Graph* create_graph(int n){
-    Graph* g = (Graph*) malloc(sizeof(Graph));
-    g->size = n;
-    g->numEdges = 0;
-    g->adjL = new list<Parint>[n];
-    g->Mark = vector<int>(n, 0);
-    g->Distance = vector<int>(n, 1e9);         
+    realStations[0].push_back({1, 10.0});
 
-    return g;
-}
+    realStations[1].push_back({2, 8.5});
+    realStations[1].push_back({8, 10.0});
+    realStations[1].push_back({9, 3.5});
 
-int n(Graph* g){
-    return g->size;
-}
+    realStations[2].push_back({3, 6.3});
+    realStations[2].push_back({8, 9.4});
+    realStations[2].push_back({12, 18.7});
 
-void setEdge(Graph* g,int i,int j,float wt)
-{
-    if (wt != 0)
-    {
-        g->numEdges++;
-    }
-    g->adjL[i].emplace_back(j,wt);
-    g->adjL[j].emplace_back(i,wt);
-}
-Graph* init_metro(Graph* g)
-{
-    setEdge(g,0,1,10);
-    setEdge(g,1,2,8.5);
-    setEdge(g,2,3,6.3);
-    setEdge(g,3,4,13);
-    setEdge(g,4,5,3);
-    setEdge(g,4,6,2.4);
-    setEdge(g,4,7,30);
-    setEdge(g,3,7,15.3);
-    setEdge(g,2,8,9.4);
-    setEdge(g,1,8,10);
-    setEdge(g,1,9,3.5);
-    setEdge(g,7,8,9.6);
-    setEdge(g,8,10,12.2);
-    setEdge(g,7,11,6.4);
-    setEdge(g,2,12,18.7);
-    setEdge(g,3,12,12.8);
-    setEdge(g,3,13,1.1);
-    setEdge(g,12,13,5.1);
+    realStations[3].push_back({4, 13.0});
+    realStations[3].push_back({7, 15.3});
+    realStations[3].push_back({12, 12.8});
+    realStations[3].push_back({13, 1.1});
 
+    realStations[4].push_back({5, 3.0});
+    realStations[4].push_back({6, 2.4});
+    realStations[4].push_back({7, 30.0});
+
+    realStations[7].push_back({8, 9.6});
+    realStations[7].push_back({11, 6.4});
+
+    realStations[8].push_back({10, 12.2});
+
+    realStations[12].push_back({13, 5.1});
+
+    return realStations;
 }
 
 // criar lista de adj com distâncias diretas entre as estações -> só vai pra frente
-void strDist() {
-    vector<vector<pair<int, float>>> stations(15); // setando com um tamanho a mais para dar match com o número das estações (inciando do 1)
+vector<vector<Parint>> strDist() 
+{
+    vector<vector<Parint>> stations(15); // setando com um tamanho a mais para dar match com o número das estações (inciando do 1)
     // stations[origem].push_back({destino, custo});
     
     // distâncias diretas a partir de E1(1) para todas as outras estações
@@ -201,15 +178,64 @@ void strDist() {
     // g[1][0].second acessa a distancia entre a estação 1 e seu primeiro vizinho
 
     // priority queue: escolher qual o próximo vertice a ser visitado?
+    return stations;
+}
 
+//int heuristic(Graph*g, vector<vector<Parint>> stations, int origin,int nextDest, int dest){
+//    float p = getEdge(g,origin,nextDest);
+//    float h = calc_dist_ret(stations, nextDest, dest);
+//    return p + h;
+//}
+
+void Dijkstra(Graph* g,int s)
+{
+    priority_queue< Parint, vector<Parint>, greater<Parint>> H;
+    int v;
+    for (int i=0; i< g->size;i++)
+    {
+        g->Distance[i] = 1000000;
+        setMark(g,i,0);
+    }
+    H.push(make_pair(0,s));
+    g->Distance[s] = 0;
+    setMark(g,s,1);
+    while(!H.empty())
+    {
+        int u = H.top().second;
+        H.pop();
+
+        for(auto edge: g->adjL[u])
+        { 
+            int v = edge.first;
+            int wt = edge.second;
+
+            if((getMark(g,v) != 1) && g->Distance[u] + wt < g->Distance[v])
+            {
+                g->Distance[v] = g->Distance[u] + heuristic(wt);
+                H.emplace(g->Distance[v], v);
+            }
+        }
+        setMark(g, u, 1);
+    }
+}
+
+float calc_dist_ret(vector<vector<Parint>> stations, int origin,int dest)
+{
+    float distancia = 0.0;
+    for (int i = origin; i < 15;i++){
+        if (stations[origin][i].first == dest)
+        {
+            distancia = stations[origin][i].second;
+            break;
+        }
+    }
+    return distancia;
 }
 
 int main()
 {
-    vector<string> rel_est_index (14);
     Graph* metro = create_graph(14);
     init_metro(metro);
-    strDist(); // cria a tabela com distâncias em linha reta até as outras estações
-
+    vector<vector<Parint>> stations = strDist(); // cria a tabela com distâncias em linha reta até as outras estações
     return 0;
 }
