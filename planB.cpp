@@ -23,10 +23,6 @@ Graph* create_graph(int n){
     return g;
 }
 
-int n(Graph* g){
-    return g->size;
-}
-
 void setEdge(Graph* g,int i,int j,float wt)
 {
     if (wt != 0)
@@ -60,8 +56,9 @@ Graph* init_metro(Graph* g)
 }
 
 // criar lista de adj com distâncias diretas entre as estações -> só vai pra frente
-void strDist() {
-    vector<vector<pair<int, float>>> stations(15); // setando com um tamanho a mais para dar match com o número das estações (inciando do 1)
+vector<vector<Parint>> strDist() 
+{
+    vector<vector<Parint>> stations(15); // setando com um tamanho a mais para dar match com o número das estações (inciando do 1)
     // stations[origem].push_back({destino, custo});
     
     // distâncias diretas a partir de E1(1) para todas as outras estações
@@ -201,15 +198,27 @@ void strDist() {
     // g[1][0].second acessa a distancia entre a estação 1 e seu primeiro vizinho
 
     // priority queue: escolher qual o próximo vertice a ser visitado?
+    return stations;
+}
 
+float calc_dist_ret(vector<vector<Parint>> stations, int origin,int dest)
+{
+  float distancia;
+  for (int i = origin; i < 15;i++)
+    {
+        if (stations[origin][i].first == dest)
+        {
+            distancia = stations[origin][i].second;
+            break;
+        }
+    }
+    return distancia;  
 }
 
 int main()
 {
-    vector<string> rel_est_index (14);
     Graph* metro = create_graph(14);
     init_metro(metro);
-    strDist(); // cria a tabela com distâncias em linha reta até as outras estações
-
+    vector<vector<Parint>> stations = strDist(); // cria a tabela com distâncias em linha reta até as outras estações
     return 0;
 }
