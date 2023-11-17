@@ -20,11 +20,11 @@ vector<vector<Parint>> realDist() {
   realStations[3].push_back({9, 9.4});
   realStations[3].push_back({13, 18.7});
 
-  // E4 -> E5, E8, E13, E14
+  // E4 -> E3, E5, E8, E13
+  realStations[4].push_back({3, 6.3});
   realStations[4].push_back({5, 13.0});
   realStations[4].push_back({8, 15.4});
   realStations[4].push_back({13, 12.8});
-  realStations[4].push_back({14, 1.1});
 
   // E5 -> E6, E7, E8
   realStations[5].push_back({6, 3.0});
@@ -206,12 +206,70 @@ float heuristic(vector<vector<Parint>> realDist, vector<vector<Parint>> stations
     return g_tempo + h_tempo;
 }
 
+void astar(vector<Parint> frontier, vector<vector<Parint>> realStations, vector<vector<Parint>> stations, int origin, int dest){
+    int nextDest = 0;
 
+    if (frontier[0].first == dest) {
+        cout << "Chegou no destino!" << endl;
+        // imprime a fronteira final
+        cout << "fronteira final: ";
+        for (auto it = frontier.begin(); it != frontier.end(); it++) {
+            cout << it->first << " " << it->second << ", ";
+        }
+        return;
+    }
+
+    // Pega o primeiro da fronteira
+    int stationStart = frontier[0].first;
+    float heuristicValue = frontier[0].second;
+    
+    // imprime a fronteira
+    cout << "fronteira antes: ";
+    for (auto it = frontier.begin(); it != frontier.end(); it++) {
+        cout << it->first << " " << it->second << ", ";
+    }  
+
+    for (auto it = realStations[stationStart].begin(); it != realStations[stationStart].end(); it++) {
+        nextDest = it->first;
+        float newHeuristic = heuristic(realStations, stations, stationStart, nextDest, dest);
+        frontier.push_back({nextDest, newHeuristic});
+    }
+    // cout << endl;
+    // cout << "fronteira depois: ";
+    // // imprime a fronteira
+    // for (auto it = frontier.begin(); it != frontier.end(); it++) {
+    //     cout << it->first << " " << it->second << ", ";
+    // }
+
+    // ordena a fronteira de acordo com a heurística
+    sort(frontier.begin(), frontier.end(), [](const Parint& a, const Parint& b) {
+        return a.second < b.second;
+    });
+    cout << endl;
+
+    frontier.erase(frontier.begin());
+    
+    // imprime a nova fronteira
+    cout << "fronteira nova: ";
+    for (auto it = frontier.begin(); it != frontier.end(); it++) {
+        cout << it->first << " " << it->second << ", ";
+    }
+    
+    // Chama recursão para próximo elemento da fronteira
+    //cout << frontier[0].first << endl;
+    astar(frontier, realStations, stations, frontier[0].first, dest);
+
+}
 
 int main() {
-vector<vector<Parint>> realStations = realDist();
-vector<vector<Parint>> stations = strDist();
-cout << heuristic(realStations, stations, 4, 5, 7) << endl;
-
-return 0;
+    vector<Parint> frontier;
+    vector<vector<Parint>> realStations = realDist();
+    vector<vector<Parint>> stations = strDist();
+    //cout << heuristic(realStations, stations, 4, 5, 7) << endl;
+    int origin = 4;
+    int dest = 7;
+    // Calcula primeira fronteira
+    frontier.push_back({ origin, 0 });
+    astar(frontier, realStations, stations, origin, dest);
+    return 0;
 }
