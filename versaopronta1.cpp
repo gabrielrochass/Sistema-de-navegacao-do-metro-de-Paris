@@ -227,13 +227,7 @@ float heuristic(vector<pstr> subway, vector<vector<Parint>> stations, int origin
     return g_tempo + h_tempo;
 }
 
-float realTime(vector<pstr> subway,int origin,int nextDest){
-    float g_dist = calc_dist_metro(subway,origin,nextDest);
-    float g_tempo = g_dist * 2;
-    return g_tempo;
-}
-
-void astar(vector<pstrfront> frontier, vector<pstr> realStations, vector<vector<Parint>> stations, int startPoint, int origin, int dest, vector<int> path, float realtime){
+void astar(vector<pstrfront> frontier, vector<pstr> realStations, vector<vector<Parint>> stations, int startPoint, int origin, int dest, vector<int> &path, int &num_bald){
     // imprime a fronteira
     int lastPoint = origin;
     cout << "Fronteira: ";
@@ -256,7 +250,6 @@ void astar(vector<pstrfront> frontier, vector<pstr> realStations, vector<vector<
                 cout << " -> ";
             }
         }
-        cout << endl << "Tempo total: " << realtime << " minutos" << endl;
         return;
     }
 
@@ -287,27 +280,39 @@ void astar(vector<pstrfront> frontier, vector<pstr> realStations, vector<vector<
             frontier.push_back({{nextDest, newHeuristic}, it->second});
         }
     }
+    //salvando as infos do na estacao antes de dar o sort
     lastPoint = frontier[0].first.first;
     string tempColor = frontier[0].second;
     // Remove o nó visitado
-    frontier.erase(frontier.begin());
-
-    // Adiciona o nó no caminho
-    if (frontier.size()>=sizeFrontier){
-        path.push_back(lastPoint);
-    }    
+    frontier.erase(frontier.begin());   
     // ordena a fronteira de acordo com a heurística
     sort(frontier.begin(), frontier.end(), [](const pstrfront& a, const pstrfront& b) {
         return a.first.second < b.first.second;
     });
-    
-    realtime += realTime(realStations, lastPoint, frontier[0].first.first);
-    if (tempColor != frontier[0].second) {
-        realtime += 4;
-    }
+        // Adiciona o nó no caminho
+    if (frontier.size()>= sizeFrontier){
+        path.push_back(lastPoint);
+        if (tempColor != frontier[0].second)  //acrescentando o numero de baldeações 
+        {
+            num_bald++;
+        }
+    }  
     // Chama recursão para próximo elemento da fronteira
-    astar(frontier, realStations, stations, startPoint, lastPoint, dest, path, realtime);
+    astar(frontier, realStations, stations, startPoint, lastPoint, dest, path, num_bald);
     return;
+}
+
+float realTime(vector<pstr> subway,vector<int> &path)
+{
+    int e1,e2;
+    float g_tempo = 0;
+    for (int i = 0;i<path.size();i++)
+    {
+      e1 = path[i];
+      e2 = path[i+1];
+      g_tempo += calc_dist_metro(subway,e1,e2) * 2;
+    }
+    return g_tempo;
 }
 
 int main() {
@@ -319,7 +324,7 @@ int main() {
 
     // Recebe de input os valors de entrada origin dest e color
     int origin, dest;
-    float realtime = 0.0;
+    int num_bald = 0;
     string color;
 
     cout << "Digite o número da estação de origem (1 a 14): ";
@@ -334,12 +339,10 @@ int main() {
     cout << "Digite o número da estação de destino (1 a 14): ";
     cin >> dest;
 
-    // origin = 1;
-    // dest = 13;
-    // color = "Azul";
-
     // Calcula primeira fronteira
     frontier.push_back({{ origin, 0 }, color});
-    astar(frontier, realStations, stations, origin, origin, dest, path, realtime);
+    astar(frontier, realStations, stations, origin, origin, dest, path, num_bald);
+    //printando o tempo real a partir do calculo
+    cout << "\n" << "O tempo gasto total é de " << realTime(realStations,path) + (4 * num_bald) << " minutos";
     return 0;
 }
