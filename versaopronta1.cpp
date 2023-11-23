@@ -227,7 +227,7 @@ float heuristic(vector<pstr> subway, vector<vector<Parint>> stations, int origin
     return g_tempo + h_tempo;
 }
 
-void astar(vector<pstrfront> frontier, vector<pstr> realStations, vector<vector<Parint>> stations, int startPoint, int origin, int dest, vector<int> &path, int &num_bald){
+void astar(vector<pstrfront> frontier, vector<pstr> realStations, vector<vector<Parint>> stations, int startPoint, int origin, int dest, vector<int> &path, int &num_bald, vector<string> &pathColor){
     // imprime a fronteira
     int lastPoint = origin;
     cout << "Fronteira: ";
@@ -240,8 +240,17 @@ void astar(vector<pstrfront> frontier, vector<pstr> realStations, vector<vector<
     cout << endl;
 
     if (frontier[0].first.first == dest) {
-        cout << endl << "Chegou no destino!" << endl;
+        cout << endl << "Chegou no destino!" << endl;        
         path.push_back(dest);
+        pathColor.push_back(frontier[0].second);
+
+        // Verifica se houve baldeação no final
+        if (pathColor.size()>1){
+            if (pathColor[pathColor.size()-2] != pathColor[pathColor.size()-1])  //acrescentando o numero de baldeações 
+            {
+                num_bald++;
+            }   
+        }     
         //Imprime o caminho
         cout << "Melhor caminho até a estação: ";
         for (auto it = path.begin(); it != path.end(); it++) {
@@ -272,6 +281,7 @@ void astar(vector<pstrfront> frontier, vector<pstr> realStations, vector<vector<
                 ++achou;
                 if (it2->first.second > newHeuristic) {
                     it2->first.second = newHeuristic;
+                    it2->second = it->second;
                 }
                 break;
             }
@@ -292,13 +302,17 @@ void astar(vector<pstrfront> frontier, vector<pstr> realStations, vector<vector<
         // Adiciona o nó no caminho
     if (frontier.size()>= sizeFrontier){
         path.push_back(lastPoint);
-        if (tempColor != frontier[0].second)  //acrescentando o numero de baldeações 
-        {
-            num_bald++;
+        pathColor.push_back(tempColor);
+        if (path.size() > 1){
+            if (pathColor[pathColor.size()-2] != tempColor)  //acrescentando o numero de baldeações 
+            {
+                //cout<<"anterior: " << path[path.size()-2] << pathColor[pathColor.size()-2] << " prox: " << lastPoint << tempColor << endl;
+                num_bald++;
+            }
         }
     }  
     // Chama recursão para próximo elemento da fronteira
-    astar(frontier, realStations, stations, startPoint, lastPoint, dest, path, num_bald);
+    astar(frontier, realStations, stations, startPoint, lastPoint, dest, path, num_bald, pathColor);
     return;
 }
 
@@ -306,7 +320,7 @@ float realTime(vector<pstr> subway,vector<int> &path)
 {
     int e1,e2;
     float g_tempo = 0;
-    for (int i = 0;i<path.size();i++)
+    for (long unsigned int i = 0;i<path.size();i++)
     {
       e1 = path[i];
       e2 = path[i+1];
@@ -317,6 +331,7 @@ float realTime(vector<pstr> subway,vector<int> &path)
 
 int main() {
     vector<int> path;
+    vector<string> pathColor;
     vector<pstrfront> frontier;
     vector<pstr> realStations = subway();
     vector<vector<Parint>> stations = strDist();
@@ -326,6 +341,8 @@ int main() {
     int origin, dest;
     int num_bald = 0;
     string color;
+
+    string tempColor = "";
 
     cout << "Digite o número da estação de origem (1 a 14): ";
     cin >> origin;
@@ -341,8 +358,9 @@ int main() {
 
     // Calcula primeira fronteira
     frontier.push_back({{ origin, 0 }, color});
-    astar(frontier, realStations, stations, origin, origin, dest, path, num_bald);
+    astar(frontier, realStations, stations, origin, origin, dest, path, num_bald, pathColor);
     //printando o tempo real a partir do calculo
-    cout << "\n" << "O tempo gasto total é de " << realTime(realStations,path) + (4 * num_bald) << " minutos";
+    cout << "\n" << "O tempo gasto total é de " << realTime(realStations,path) + (4 * num_bald) << " minutos" << endl;
+    //cout << "Número de baldeações:" << num_bald << endl;
     return 0;
 }
